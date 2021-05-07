@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <h1>Kontent</h1>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.6.1/gsap.min.js"></script>
+
+    <script>
+        var scene = new THREE.Scene();
+        
+        var camera = new THREE.PerspectiveCamera(
+            75,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000);
+        // Set depth of camera, otherwise the camera starts in center and we would see no objects
+        camera.position.z = 5;
+
+        var renderer = new THREE.WebGLRenderer({antialias: true});
+
+        // Something like background color
+        renderer.setClearColor("#e5e5e5");
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // append canvas to browser
+        document.body.appendChild(renderer.domElement);
+
+        // Listen to window resize and update its size respectively
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight)
+            camera.aspect = window.innerWidth / window.innerHeight;
+
+            camera.updateProjectionMatrix();
+        })
+
+        var raycaster = new THREE.Raycaster();
+        var mouse = new THREE.Vector2();
+
+        // When creating 3D object, you need to set its geometry(shape) and its material (sueface type)
+        var geometry = new THREE.BoxGeometry(1, 1, 1);
+        var material = new THREE.MeshLambertMaterial({color: 0xF05A22});
+        var mesh = new THREE.Mesh(geometry, material);
+
+        var meshL = new THREE.Mesh(geometry, material);
+        meshL.position.x = -2.5;
+        var meshR = new THREE.Mesh(geometry, material);
+        meshR.position.x = 2.5;
+        var meshU = new THREE.Mesh(geometry, material);
+        meshU.position.y = -2.5;
+        var meshD = new THREE.Mesh(geometry, material);
+        meshD.position.y = 2.5;
+
+        // When not set, the object is in center
+        // mesh.position.x = 0;
+        // mesh.rotation.set(.5, .8, 0)
+        // mesh.scale.set(1,2,1)
+        scene.add(mesh);
+        scene.add(meshL);
+        scene.add(meshR);
+        scene.add(meshU);
+        scene.add(meshD);
+
+        // Set light otherwise all objects will be black
+        var light = new THREE.PointLight(0xFFFFFF, 1, 1000)
+        light.position.set(0,0,0);
+        scene.add(light);
+
+        var light = new THREE.PointLight(0xFFFFFF, 2, 1000)
+        light.position.set(0,0,25);
+        scene.add(light);
+
+        var render = function () {
+            // Creates loop which calls the function render everytime the screen is refreshed (60FPS)
+            // https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
+            requestAnimationFrame(render)
+
+            // Rotate on every refresh
+            mesh.rotation.x += 0.015;
+            mesh.rotation.y += 0.015;
+            // mesh.rotation.z += 0.015;
+
+            // Tell renderer to apply scene and camera settings
+            renderer.render(scene, camera)
+        }
+
+        function onMouseMove(event) {
+
+        }
+
+
+
+        // Using GSAP
+        // https://greensock.com/docs/v2/TimelineMax
+        this.tl = new TimelineMax().delay(.55);
+
+        window.addEventListener('mousemove', (e) =>
+        {
+            e.preventDefault();
+
+            // set mouse position inside window
+            mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+            mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+
+            var intersects = raycaster.intersectObjects(scene.children, true);
+            for (var i = 0; i < intersects.length; i++) {
+                this.tl = new TimelineMax();
+                // params: what, transition length, {which property, transition type}
+                this.tl.to(intersects[i].object.scale, 1, {x: 2, ease: Expo.easeOut})
+                this.tl.to(intersects[i].object.rotation, 1, {z: Math.PI*.5, ease: Expo.easeOut})
+                this.tl.to(intersects[i].object.scale, 1, {x: .5, ease: Expo.easeOut})
+                this.tl.to(intersects[i].object.rotation, 1, {z: Math.PI, ease: Expo.easeOut})
+                this.tl.to(intersects[i].object.scale, 1, {x: 1, ease: Expo.easeOut})
+            }
+        })
+        render();
+
+    </script>
+</body>
+</html>
